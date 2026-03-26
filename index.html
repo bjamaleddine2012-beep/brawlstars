@@ -6,6 +6,7 @@
 <title>Brawl Zone - Battle Royale</title>
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Russo+One&family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <script src="/socket.io/socket.io.js"></script>
+<script src="/brawlers.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0a0a2e;overflow:hidden;font-family:'Poppins',sans-serif;user-select:none;-webkit-user-select:none;touch-action:none}
@@ -187,14 +188,49 @@ canvas{display:block}
 @keyframes superPulse{0%,100%{box-shadow:0 0 20px rgba(255,170,0,0.5)}50%{box-shadow:0 0 40px rgba(255,170,0,0.9)}}
 .controls-hint{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.3);font-size:11px;z-index:55;pointer-events:none;display:none;font-weight:500;letter-spacing:1px}
 
+/* ===== CONTROLS TUTORIAL ===== */
+#controlsTutorial{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;transition:opacity 0.4s}
+#controlsTutorial.hidden{opacity:0;pointer-events:none}
+.tutorial-box{max-width:500px;width:90%;background:linear-gradient(145deg,rgba(30,20,60,0.95),rgba(15,30,65,0.95));border-radius:20px;padding:28px;border:2px solid rgba(255,255,255,0.1);text-align:center}
+.tutorial-title{font-family:'Bungee',cursive;font-size:24px;color:#ffaa00;margin-bottom:16px;text-shadow:0 0 15px rgba(255,170,0,0.4)}
+.tutorial-section{margin-bottom:14px}
+.tutorial-section-title{color:rgba(255,255,255,0.5);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.tutorial-row{display:flex;align-items:center;gap:12px;margin-bottom:8px;justify-content:center}
+.tutorial-key{display:inline-flex;align-items:center;justify-content:center;min-width:36px;height:36px;padding:0 10px;background:linear-gradient(180deg,rgba(255,255,255,0.15),rgba(255,255,255,0.05));border:2px solid rgba(255,255,255,0.2);border-radius:8px;color:#fff;font-size:13px;font-weight:800;font-family:'Poppins',sans-serif;box-shadow:0 3px 0 rgba(0,0,0,0.3)}
+.tutorial-or{color:rgba(255,255,255,0.25);font-size:10px;font-weight:600}
+.tutorial-desc{color:rgba(255,255,255,0.7);font-size:13px;font-weight:600}
+.tutorial-mouse{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(255,255,255,0.08);border-radius:10px;border:1px solid rgba(255,255,255,0.12)}
+.tutorial-mouse-icon{font-size:20px}
+.tutorial-close{margin-top:16px;padding:10px 36px;border-radius:10px;border:none;background:linear-gradient(135deg,#ff6b00,#ff3300);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;box-shadow:0 4px 15px rgba(255,50,0,0.3)}
+.tutorial-close:hover{transform:translateY(-2px)}
+.tutorial-mobile{display:none}
+.tutorial-desktop{display:block}
+@media(pointer:coarse){.tutorial-mobile{display:block}.tutorial-desktop{display:none}}
+
+/* Brawler grid - scrollable with rarity filter */
+.rarity-filter{display:flex;gap:6px;margin-bottom:10px;position:relative;z-index:2;flex-wrap:wrap;justify-content:center}
+.rarity-btn{padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.5);font-size:10px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;transition:all 0.2s;text-transform:uppercase}
+.rarity-btn.active{color:#fff;border-color:currentColor;background:rgba(255,255,255,0.08)}
+.brawler-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-bottom:14px;max-width:700px;width:100%;position:relative;z-index:2;max-height:280px;overflow-y:auto;padding:4px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.1) transparent}
+.brawler-grid::-webkit-scrollbar{width:4px}
+.brawler-grid::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:4px}
+.brawler-card{height:95px;border-radius:12px}
+.brawler-rarity-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;z-index:1}
+
+/* Controls help button */
+.help-btn{position:fixed;top:12px;right:12px;z-index:65;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);font-size:16px;font-weight:800;cursor:pointer;display:none;backdrop-filter:blur(4px);font-family:'Poppins',sans-serif;pointer-events:all}
+.help-btn:hover{background:rgba(255,255,255,0.1);color:#fff}
+
 /* ===== RESPONSIVE ===== */
 @media(max-width:600px){
-  .brawler-grid{grid-template-columns:repeat(5,1fr);gap:6px}
-  .brawler-card{height:85px}
-  .brawler-avatar{width:34px;height:34px;font-size:18px}
-  .brawler-name{font-size:9px}
+  .brawler-grid{grid-template-columns:repeat(4,1fr);gap:6px;max-height:220px}
+  .brawler-card{height:80px}
+  .brawler-avatar{width:30px;height:30px;font-size:16px}
+  .brawler-name{font-size:8px}
   .mp-buttons{flex-direction:column;align-items:center}
   .lobby-code{font-size:32px}
+  .tutorial-box{padding:18px}
+  .tutorial-key{min-width:28px;height:28px;font-size:11px}
 }
 </style>
 </head>
@@ -220,7 +256,16 @@ canvas{display:block}
     <div class="trophy-item"><span class="trophy-icon">⭐</span><div><div class="trophy-value" id="winCount">0</div><div class="trophy-label">Wins</div></div></div>
     <div class="trophy-item"><span class="trophy-icon">💀</span><div><div class="trophy-value" id="killCount">0</div><div class="trophy-label">Kills</div></div></div>
   </div>
-  <div class="section-label">SELECT BRAWLER</div>
+  <div class="section-label">SELECT BRAWLER (<span id="brawlerCount">0</span>)</div>
+  <div class="rarity-filter" id="rarityFilter">
+    <div class="rarity-btn active" data-rarity="all" style="color:#fff">All</div>
+    <div class="rarity-btn" data-rarity="common" style="--rc:#8e8e93">Common</div>
+    <div class="rarity-btn" data-rarity="rare" style="--rc:#4fc3f7">Rare</div>
+    <div class="rarity-btn" data-rarity="super-rare" style="--rc:#66bb6a">Super Rare</div>
+    <div class="rarity-btn" data-rarity="epic" style="--rc:#ba68c8">Epic</div>
+    <div class="rarity-btn" data-rarity="mythic" style="--rc:#ef5350">Mythic</div>
+    <div class="rarity-btn" data-rarity="legendary" style="--rc:#ffd54f">Legendary</div>
+  </div>
   <div class="brawler-grid" id="brawlerGrid"></div>
   <div class="section-label">MULTIPLAYER</div>
   <div class="mp-buttons">
@@ -303,6 +348,59 @@ canvas{display:block}
 <button id="superBtn">SUPER</button>
 <div class="controls-hint" id="controlsHint">WASD move · Mouse aim & shoot · SPACE super</div>
 
+<!-- CONTROLS TUTORIAL -->
+<div id="controlsTutorial" class="hidden">
+  <div class="tutorial-box">
+    <div class="tutorial-title">HOW TO PLAY</div>
+    <div class="tutorial-desktop">
+      <div class="tutorial-section">
+        <div class="tutorial-section-title">Movement</div>
+        <div class="tutorial-row">
+          <div class="tutorial-key">W</div><div class="tutorial-key">A</div><div class="tutorial-key">S</div><div class="tutorial-key">D</div>
+          <div class="tutorial-or">or</div>
+          <div class="tutorial-key">↑</div><div class="tutorial-key">←</div><div class="tutorial-key">↓</div><div class="tutorial-key">→</div>
+        </div>
+        <div class="tutorial-desc">Move your brawler around the arena</div>
+      </div>
+      <div class="tutorial-section">
+        <div class="tutorial-section-title">Attack</div>
+        <div class="tutorial-row">
+          <div class="tutorial-mouse"><span class="tutorial-mouse-icon">🖱️</span> Aim with mouse</div>
+        </div>
+        <div class="tutorial-row">
+          <div class="tutorial-mouse"><span class="tutorial-mouse-icon">🔘</span> Hold Left Click to shoot</div>
+        </div>
+        <div class="tutorial-desc">Point cursor at enemies and hold click to fire</div>
+      </div>
+      <div class="tutorial-section">
+        <div class="tutorial-section-title">Super Ability</div>
+        <div class="tutorial-row">
+          <div class="tutorial-key" style="min-width:80px">SPACE</div>
+        </div>
+        <div class="tutorial-desc">Charge by dealing damage, then press Space to unleash!</div>
+      </div>
+    </div>
+    <div class="tutorial-mobile">
+      <div class="tutorial-section">
+        <div class="tutorial-section-title">Movement</div>
+        <div class="tutorial-desc">Touch & drag LEFT side of screen</div>
+      </div>
+      <div class="tutorial-section">
+        <div class="tutorial-section-title">Attack</div>
+        <div class="tutorial-desc">Touch & drag RIGHT side of screen to aim & auto-shoot</div>
+      </div>
+      <div class="tutorial-section">
+        <div class="tutorial-section-title">Super Ability</div>
+        <div class="tutorial-desc">Tap the golden SUPER button when charged</div>
+      </div>
+    </div>
+    <button class="tutorial-close" id="closeTutorial">GOT IT!</button>
+  </div>
+</div>
+
+<!-- HELP BUTTON (in-game) -->
+<button class="help-btn" id="helpBtn">?</button>
+
 <!-- COUNTDOWN -->
 <div class="countdown-overlay hidden" id="countdownOverlay"><div class="countdown-num" id="countdownNum"></div></div>
 
@@ -318,18 +416,8 @@ const socket = io();
 const TILE = 40, MAP_COLS = 50, MAP_ROWS = 50;
 const MAP_W = MAP_COLS * TILE, MAP_H = MAP_ROWS * TILE;
 
-const BRAWLERS = [
-  { name:'Shelly', role:'Fighter', color:'#e84393', hp:5600 },
-  { name:'Colt', role:'Sharpshooter', color:'#0984e3', hp:3600 },
-  { name:'Bull', role:'Tank', color:'#d63031', hp:7000 },
-  { name:'Brock', role:'Sharpshooter', color:'#6c5ce7', hp:3200 },
-  { name:'Jessie', role:'Support', color:'#fdcb6e', hp:4200 },
-  { name:'Nita', role:'Fighter', color:'#00b894', hp:5000 },
-  { name:'Poco', role:'Healer', color:'#00cec9', hp:5000 },
-  { name:'El Primo', role:'Tank', color:'#e17055', hp:8000 },
-  { name:'Barley', role:'Thrower', color:'#a29bfe', hp:3400 },
-  { name:'Spike', role:'Fighter', color:'#55efc4', hp:3200 }
-];
+const BRAWLERS = BRAWLER_DATA; // loaded from brawlers.js (80+ brawlers)
+let currentRarityFilter = 'all';
 
 // ---- STATE ----
 let selectedBrawler = 0, playerName = '';
@@ -403,14 +491,41 @@ function dist(a,b){return Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2)}
 function buildBrawlerGrid() {
   const grid = document.getElementById('brawlerGrid');
   grid.innerHTML = '';
+  const rarityColors = RARITY_COLORS;
+  let count = 0;
   BRAWLERS.forEach((b,i) => {
+    if (currentRarityFilter !== 'all' && b.rarity !== currentRarityFilter) return;
+    count++;
     const card = document.createElement('div');
     card.className = 'brawler-card' + (i===selectedBrawler?' selected':'');
-    card.innerHTML = `<div class="brawler-avatar" style="background:radial-gradient(circle at 35% 35%,${lighten(b.color,30)},${b.color})">${b.name[0]}</div><div class="brawler-name">${b.name}</div><div class="brawler-role">${b.role}</div>`;
+    const rc = rarityColors[b.rarity] || '#888';
+    card.innerHTML = `<div class="brawler-rarity-dot" style="background:${rc}"></div><div class="brawler-avatar" style="background:radial-gradient(circle at 35% 35%,${lighten(b.color,30)},${b.color})">${b.name[0]}</div><div class="brawler-name">${b.name}</div><div class="brawler-role">${b.role}</div>`;
     card.onclick = () => { selectedBrawler=i; buildBrawlerGrid(); if(roomCode) socket.emit('changeBrawler',{brawlerIdx:i}); };
     grid.appendChild(card);
   });
+  document.getElementById('brawlerCount').textContent = currentRarityFilter==='all' ? BRAWLERS.length : count;
 }
+
+// Rarity filter
+document.querySelectorAll('.rarity-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.rarity-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentRarityFilter = btn.dataset.rarity;
+    buildBrawlerGrid();
+  };
+});
+
+// Controls tutorial
+let tutorialShown = false;
+document.getElementById('closeTutorial').onclick = () => {
+  document.getElementById('controlsTutorial').classList.add('hidden');
+  localStorage.setItem('bz_tutorial_seen', '1');
+};
+document.getElementById('helpBtn').onclick = () => {
+  document.getElementById('controlsTutorial').classList.remove('hidden');
+};
+
 buildBrawlerGrid();
 
 // ---- MENU BUTTONS ----
@@ -529,7 +644,12 @@ socket.on('gameStart', data => {
   document.getElementById('hudHp').style.display = 'flex';
   document.getElementById('controlsHint').style.display = isMobile ? 'none' : 'block';
   document.getElementById('superBtn').style.display = 'block';
+  document.getElementById('helpBtn').style.display = 'block';
   buildAmmoUI(3);
+  // Show tutorial on first play
+  if (!localStorage.getItem('bz_tutorial_seen')) {
+    document.getElementById('controlsTutorial').classList.remove('hidden');
+  }
 });
 
 socket.on('countdown', num => {
@@ -605,6 +725,7 @@ socket.on('gameOver', ({winnerId, winnerName, rankings}) => {
   document.getElementById('hudHp').style.display='none';
   document.getElementById('superBtn').style.display='none';
   document.getElementById('controlsHint').style.display='none';
+  document.getElementById('helpBtn').style.display='none';
   document.getElementById('killFeed').innerHTML='';
 
   const won = winnerId === myId;
@@ -821,39 +942,159 @@ function renderEntity(e, isMe){
   const ex=e.x,ey=e.y,ew=e.w||30,eh=e.h||30;
   const cx=ex+ew/2,cy=ey+eh/2;
   const bIdx=e.brawlerIdx!=null?e.brawlerIdx:0;
-  const bColor=e.color||BRAWLERS[bIdx].color;
-  const bName=e.name||BRAWLERS[bIdx].name;
+  const bd=BRAWLERS[bIdx]||BRAWLERS[0];
+  const bColor=e.color||bd.color;
+  const bName=e.name||bd.name;
+  const skin=bd.skin||'#f0c8a0';
+  const hat=bd.hat||'none';
+  const hair=bd.hair||'none';
+  const role=bd.role||'Fighter';
 
   // Shadow
-  ctx.fillStyle='rgba(0,0,0,0.25)';ctx.beginPath();ctx.ellipse(cx,ey+eh+2,ew/2.2,6,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,0.3)';ctx.beginPath();ctx.ellipse(cx,ey+eh+2,ew/2.2,5,0,0,Math.PI*2);ctx.fill();
   if(e.flashTimer>0) ctx.globalAlpha=0.5+Math.sin(e.flashTimer*40)*0.5;
   if(e.invincible>0) ctx.globalAlpha=0.5+Math.sin(Date.now()*0.02)*0.3;
 
-  // Body
-  ctx.fillStyle=bColor;ctx.beginPath();ctx.roundRect?ctx.roundRect(ex+2,ey+8,ew-4,eh-8,8):ctx.rect(ex+2,ey+8,ew-4,eh-8);ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,0.15)';ctx.beginPath();ctx.roundRect?ctx.roundRect(ex+4,ey+10,ew/2-4,eh-14,6):ctx.rect(ex+4,ey+10,ew/2-4,eh-14);ctx.fill();
-  // Head
-  ctx.fillStyle=bColor;ctx.beginPath();ctx.arc(cx,ey+8,12,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,0.2)';ctx.beginPath();ctx.arc(cx-3,ey+5,5,0,Math.PI*2);ctx.fill();
-  // Eyes
-  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx-4,ey+7,3.5,0,Math.PI*2);ctx.arc(cx+4,ey+7,3.5,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#111';ctx.beginPath();ctx.arc(cx-3.5,ey+7.5,2,0,Math.PI*2);ctx.arc(cx+4.5,ey+7.5,2,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx-4.5,ey+6.5,1,0,Math.PI*2);ctx.arc(cx+3.5,ey+6.5,1,0,Math.PI*2);ctx.fill();
+  // === BODY ===
+  // Legs
+  ctx.fillStyle=darken(bColor,30);
+  ctx.fillRect(cx-8,ey+eh-8,6,8);
+  ctx.fillRect(cx+2,ey+eh-8,6,8);
+  // Shoes
+  ctx.fillStyle=role==='Tank'?'#5a3a1a':role==='Assassin'?'#222':'#4a3a2a';
+  ctx.fillRect(cx-9,ey+eh-2,8,3);
+  ctx.fillRect(cx+1,ey+eh-2,8,3);
+
+  // Torso
+  ctx.fillStyle=bColor;
+  ctx.beginPath();
+  if(ctx.roundRect) ctx.roundRect(ex+2,ey+10,ew-4,eh-14,6);
+  else ctx.rect(ex+2,ey+10,ew-4,eh-14);
+  ctx.fill();
+  // Body highlight
+  ctx.fillStyle='rgba(255,255,255,0.12)';
+  ctx.beginPath();
+  if(ctx.roundRect) ctx.roundRect(ex+4,ey+11,(ew-8)/2,eh-16,4);
+  else ctx.rect(ex+4,ey+11,(ew-8)/2,eh-16);
+  ctx.fill();
+  // Belt/detail
+  ctx.fillStyle=darken(bColor,20);
+  ctx.fillRect(ex+4,ey+eh/2+4,ew-8,2);
+
+  // Arms
+  ctx.fillStyle=skin;
+  ctx.fillRect(ex-2,ey+13,5,10);
+  ctx.fillRect(ex+ew-3,ey+13,5,10);
+  // Gloves/hands
+  const handColor=role==='Tank'?bColor:role==='Assassin'?'#333':skin;
+  ctx.fillStyle=handColor;
+  ctx.beginPath();ctx.arc(ex,ey+24,3,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(ex+ew,ey+24,3,0,Math.PI*2);ctx.fill();
+
+  // === HEAD ===
+  // Neck
+  ctx.fillStyle=skin;ctx.fillRect(cx-3,ey+5,6,8);
+  // Head circle
+  ctx.fillStyle=skin;ctx.beginPath();ctx.arc(cx,ey+4,11,0,Math.PI*2);ctx.fill();
+  // Head highlight
+  ctx.fillStyle='rgba(255,255,255,0.15)';ctx.beginPath();ctx.arc(cx-3,ey+1,5,0,Math.PI*2);ctx.fill();
+
+  // === HAIR ===
+  if(hair!=='none'){
+    const hc=hair==='brown'?'#6b3a1a':hair==='red'?'#cc3300':hair==='black'?'#1a1a1a':hair==='blonde'||hair==='yellow'?'#f0d060':hair==='pink'?'#ff69b4':hair==='purple'?'#8b5cf6':hair==='green'?'#2d8a2d':hair==='orange'?'#e87030':hair==='white'||hair==='grey'?'#bbb':hair==='sandy'?'#d4a574':hair==='fire'?'#ff4500':hair==='red-black'?'#880000':bColor;
+    ctx.fillStyle=hc;
+    ctx.beginPath();ctx.arc(cx,ey-1,11,Math.PI,Math.PI*2);ctx.fill(); // top hair
+    // Hair style variations
+    if(hair==='fire'){ctx.fillStyle='#ff6600';ctx.beginPath();ctx.moveTo(cx-8,ey-2);ctx.lineTo(cx-4,ey-10);ctx.lineTo(cx,ey-4);ctx.lineTo(cx+4,ey-12);ctx.lineTo(cx+8,ey-2);ctx.fill();}
+    else if(role==='Assassin'){ctx.fillRect(cx-10,ey-4,20,5);} // spiky
+    else{ctx.beginPath();ctx.arc(cx,ey-1,11,Math.PI*1.1,Math.PI*1.9);ctx.fill();}
+  }
+
+  // === HAT/ACCESSORY ===
+  if(hat==='cap'||hat==='police'){ctx.fillStyle=hat==='police'?'#1a3a6a':darken(bColor,20);ctx.beginPath();ctx.arc(cx,ey-2,11,Math.PI,Math.PI*2);ctx.fill();ctx.fillRect(cx-14,ey-3,28,4);if(hat==='police'){ctx.fillStyle='#ffd700';ctx.beginPath();ctx.arc(cx,ey-4,3,0,Math.PI*2);ctx.fill();}}
+  else if(hat==='tophat'){ctx.fillStyle='#1a1a2e';ctx.fillRect(cx-8,ey-14,16,12);ctx.fillRect(cx-12,ey-3,24,4);}
+  else if(hat==='sombrero'){ctx.fillStyle='#cc8844';ctx.beginPath();ctx.ellipse(cx,ey-2,16,4,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx,ey-6,8,Math.PI,Math.PI*2);ctx.fill();}
+  else if(hat==='mask'){ctx.fillStyle='#cc0000';ctx.beginPath();ctx.arc(cx,ey+4,11,Math.PI*1.2,Math.PI*1.8);ctx.fill();ctx.fillStyle='#ffcc00';ctx.fillRect(cx-8,ey-2,16,3);}
+  else if(hat==='helmet'||hat==='hardhat'){ctx.fillStyle=hat==='hardhat'?'#ffcc00':'#666';ctx.beginPath();ctx.arc(cx,ey-1,12,Math.PI,Math.PI*2);ctx.fill();ctx.fillRect(cx-12,ey-2,24,3);}
+  else if(hat==='shades'){ctx.fillStyle='#111';ctx.fillRect(cx-9,ey+1,7,4);ctx.fillRect(cx+2,ey+1,7,4);ctx.fillRect(cx-2,ey+2,4,2);}
+  else if(hat==='goggles'){ctx.strokeStyle='#ffcc00';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx-5,ey+3,4,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(cx+5,ey+3,4,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(cx-1,ey+3);ctx.lineTo(cx+1,ey+3);ctx.stroke();}
+  else if(hat==='headband'){ctx.fillStyle='#ff0000';ctx.fillRect(cx-12,ey-1,24,3);}
+  else if(hat==='hood'||hat==='hoodie'){ctx.fillStyle=darken(bColor,30);ctx.beginPath();ctx.arc(cx,ey-1,13,Math.PI*0.8,Math.PI*2.2);ctx.fill();}
+  else if(hat==='pirate'){ctx.fillStyle='#222';ctx.beginPath();ctx.arc(cx,ey-2,11,Math.PI,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(cx-3,ey-8);ctx.lineTo(cx,ey-12);ctx.lineTo(cx+3,ey-8);ctx.fill();}
+  else if(hat==='bear-hood'){ctx.fillStyle='#8B4513';ctx.beginPath();ctx.arc(cx,ey-2,13,Math.PI*0.8,Math.PI*2.2);ctx.fill();ctx.beginPath();ctx.arc(cx-10,ey-6,5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx+10,ey-6,5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#d4a574';ctx.beginPath();ctx.arc(cx-10,ey-6,3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx+10,ey-6,3,0,Math.PI*2);ctx.fill();}
+  else if(hat==='bowtie'){ctx.fillStyle='#cc0000';ctx.beginPath();ctx.moveTo(cx-5,ey+14);ctx.lineTo(cx,ey+12);ctx.lineTo(cx+5,ey+14);ctx.lineTo(cx,ey+16);ctx.fill();}
+  else if(hat==='samurai'){ctx.fillStyle='#880000';ctx.beginPath();ctx.arc(cx,ey-2,12,Math.PI,Math.PI*2);ctx.fill();ctx.fillStyle='#ffcc00';ctx.beginPath();ctx.arc(cx,ey-6,4,0,Math.PI*2);ctx.fill();}
+  else if(hat==='jester'){ctx.fillStyle='#ff0000';ctx.beginPath();ctx.moveTo(cx-10,ey-4);ctx.lineTo(cx-6,ey-14);ctx.lineTo(cx,ey-4);ctx.fill();ctx.fillStyle='#0066ff';ctx.beginPath();ctx.moveTo(cx,ey-4);ctx.lineTo(cx+6,ey-14);ctx.lineTo(cx+10,ey-4);ctx.fill();ctx.fillStyle='#ffcc00';ctx.beginPath();ctx.arc(cx-6,ey-14,2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx+6,ey-14,2,0,Math.PI*2);ctx.fill();}
+  else if(hat==='horns'){ctx.fillStyle='#cc4400';ctx.beginPath();ctx.moveTo(cx-8,ey-4);ctx.lineTo(cx-12,ey-14);ctx.lineTo(cx-4,ey-4);ctx.fill();ctx.beginPath();ctx.moveTo(cx+4,ey-4);ctx.lineTo(cx+12,ey-14);ctx.lineTo(cx+8,ey-4);ctx.fill();}
+  else if(hat==='cat-ears'){ctx.fillStyle=bColor;ctx.beginPath();ctx.moveTo(cx-10,ey-2);ctx.lineTo(cx-7,ey-12);ctx.lineTo(cx-2,ey-2);ctx.fill();ctx.beginPath();ctx.moveTo(cx+2,ey-2);ctx.lineTo(cx+7,ey-12);ctx.lineTo(cx+10,ey-2);ctx.fill();ctx.fillStyle='#ffb0c0';ctx.beginPath();ctx.moveTo(cx-8,ey-3);ctx.lineTo(cx-7,ey-9);ctx.lineTo(cx-4,ey-3);ctx.fill();ctx.beginPath();ctx.moveTo(cx+4,ey-3);ctx.lineTo(cx+7,ey-9);ctx.lineTo(cx+8,ey-3);ctx.fill();}
+  else if(hat==='alien'){ctx.fillStyle=bColor;ctx.beginPath();ctx.arc(cx,ey-4,14,Math.PI,Math.PI*2);ctx.fill();}
+  else if(hat==='beret'){ctx.fillStyle='#cc2244';ctx.beginPath();ctx.arc(cx+2,ey-4,10,Math.PI*0.8,Math.PI*2.1);ctx.fill();}
+  else if(hat==='monocle'){ctx.strokeStyle='#ffcc00';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(cx+5,ey+3,4,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(cx+5,ey+7);ctx.lineTo(cx+5,ey+14);ctx.stroke();}
+  else if(hat==='conductor'){ctx.fillStyle='#222';ctx.beginPath();ctx.arc(cx,ey-2,11,Math.PI,Math.PI*2);ctx.fill();ctx.fillRect(cx-12,ey-3,24,3);ctx.fillStyle='#ffcc00';ctx.fillRect(cx-4,ey-4,8,2);}
+  else if(hat==='cowboy'){ctx.fillStyle='#8B6914';ctx.beginPath();ctx.ellipse(cx,ey-2,16,4,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx,ey-6,9,Math.PI,Math.PI*2);ctx.fill();}
+  else if(hat==='space'){ctx.fillStyle='rgba(200,200,255,0.3)';ctx.beginPath();ctx.arc(cx,ey+2,14,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#aaa';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,ey+2,14,0,Math.PI*2);ctx.stroke();}
+  else if(hat==='wings'){ctx.fillStyle='rgba(255,255,255,0.5)';ctx.beginPath();ctx.moveTo(cx-14,ey+4);ctx.lineTo(cx-20,ey-8);ctx.lineTo(cx-8,ey);ctx.fill();ctx.beginPath();ctx.moveTo(cx+14,ey+4);ctx.lineTo(cx+20,ey-8);ctx.lineTo(cx+8,ey);ctx.fill();}
+  else if(hat==='leaf'){ctx.fillStyle='#44aa44';ctx.beginPath();ctx.ellipse(cx,ey-10,4,6,0.3,0,Math.PI*2);ctx.fill();}
+  else if(hat==='ribbon'||hat==='bow'){ctx.fillStyle='#ff3388';ctx.beginPath();ctx.moveTo(cx-6,ey-6);ctx.lineTo(cx,ey-4);ctx.lineTo(cx+6,ey-6);ctx.lineTo(cx,ey-8);ctx.fill();}
+  else if(hat==='glasses'){ctx.strokeStyle='#666';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(cx-5,ey+3,4,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(cx+5,ey+3,4,0,Math.PI*2);ctx.stroke();}
+  else if(hat==='headphones'){ctx.strokeStyle='#444';ctx.lineWidth=3;ctx.beginPath();ctx.arc(cx,ey-2,13,Math.PI*1.1,Math.PI*1.9);ctx.stroke();ctx.fillStyle='#666';ctx.fillRect(cx-14,ey-2,5,8);ctx.fillRect(cx+9,ey-2,5,8);}
+  else if(hat==='barrel'){ctx.fillStyle='#8B4513';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(ex-1,ey+4,ew+2,eh-4,4);else ctx.rect(ex-1,ey+4,ew+2,eh-4);ctx.fill();ctx.strokeStyle='#666';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(ex,ey+10);ctx.lineTo(ex+ew,ey+10);ctx.moveTo(ex,ey+eh-4);ctx.lineTo(ex+ew,ey+eh-4);ctx.stroke();}
+  else if(hat==='mining'){ctx.fillStyle='#996633';ctx.beginPath();ctx.arc(cx,ey-2,11,Math.PI,Math.PI*2);ctx.fill();ctx.fillStyle='#ffcc00';ctx.beginPath();ctx.arc(cx,ey-3,4,Math.PI,Math.PI*2);ctx.fill();}
+  else if(hat==='lifeguard'){ctx.fillStyle='#ff3300';ctx.beginPath();ctx.arc(cx,ey-2,11,Math.PI,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(cx-3,ey-7,6,2);}
+  else if(hat==='scarf'){ctx.fillStyle='#aa0044';ctx.fillRect(cx-12,ey+12,24,4);ctx.fillRect(cx+8,ey+12,4,12);}
+  else if(hat==='chef'){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx,ey-6,10,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx-5,ey-8,6,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx+5,ey-8,6,0,Math.PI*2);ctx.fill();}
+  else if(hat==='fedora'){ctx.fillStyle='#444';ctx.beginPath();ctx.ellipse(cx,ey-2,14,4,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx,ey-6,9,Math.PI,Math.PI*2);ctx.fill();}
+  else if(hat==='antennae'){ctx.strokeStyle='#ffcc00';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx-4,ey-6);ctx.lineTo(cx-6,ey-14);ctx.stroke();ctx.beginPath();ctx.moveTo(cx+4,ey-6);ctx.lineTo(cx+6,ey-14);ctx.stroke();ctx.fillStyle='#ffcc00';ctx.beginPath();ctx.arc(cx-6,ey-14,2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx+6,ey-14,2,0,Math.PI*2);ctx.fill();}
+  else if(hat==='plant'){ctx.fillStyle='#44aa44';ctx.beginPath();ctx.moveTo(cx-2,ey-6);ctx.lineTo(cx,ey-14);ctx.lineTo(cx+2,ey-6);ctx.fill();ctx.fillStyle='#66cc66';ctx.beginPath();ctx.ellipse(cx-4,ey-10,3,5,0.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(cx+4,ey-10,3,5,-0.5,0,Math.PI*2);ctx.fill();}
+  else if(hat==='screen'){ctx.fillStyle='#111';ctx.fillRect(cx-10,ey-6,20,14);ctx.fillStyle='#00ff00';ctx.fillRect(cx-8,ey-4,16,10);ctx.fillStyle='#003300';ctx.font='6px monospace';ctx.textAlign='center';ctx.fillText('>_',cx,ey+4);}
+  else if(hat==='visor'){ctx.fillStyle='rgba(0,200,255,0.4)';ctx.fillRect(cx-10,ey+1,20,5);ctx.strokeStyle='rgba(0,200,255,0.6)';ctx.lineWidth=1;ctx.strokeRect(cx-10,ey+1,20,5);}
+  else if(hat==='chameleon'){ctx.fillStyle='#66cc66';ctx.beginPath();ctx.arc(cx,ey-2,13,Math.PI*0.8,Math.PI*2.2);ctx.fill();ctx.fillStyle='#44aa44';ctx.beginPath();ctx.arc(cx-10,ey-4,5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx+10,ey-4,5,0,Math.PI*2);ctx.fill();}
+  else if(hat==='bubble'){ctx.fillStyle='#ff69b4';ctx.beginPath();ctx.arc(cx+10,ey+10,5,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(255,255,255,0.3)';ctx.beginPath();ctx.arc(cx+9,ey+9,2,0,Math.PI*2);ctx.fill();}
+  else if(hat==='parasol'){ctx.fillStyle='#ff69b4';ctx.beginPath();ctx.arc(cx,ey-8,14,Math.PI,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(cx-14,ey-8);ctx.lineTo(cx-7,ey-8);ctx.lineTo(cx-7,ey-14);ctx.fill();ctx.beginPath();ctx.moveTo(cx,ey-8);ctx.lineTo(cx+7,ey-8);ctx.lineTo(cx+7,ey-14);ctx.fill();ctx.strokeStyle='#cc6600';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,ey-8);ctx.lineTo(cx,ey+4);ctx.stroke();}
+
+  // === EYES (drawn after hat so they're on top) ===
+  if(hat!=='screen' && hat!=='barrel'){
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx-4,ey+3,3.5,0,Math.PI*2);ctx.arc(cx+4,ey+3,3.5,0,Math.PI*2);ctx.fill();
+    // Pupil color based on role
+    const pupilColor=role==='Assassin'?'#ff0000':role==='Tank'?'#111':role==='Healer'?'#00aa88':'#111';
+    ctx.fillStyle=pupilColor;ctx.beginPath();ctx.arc(cx-3.5,ey+3.5,2,0,Math.PI*2);ctx.arc(cx+4.5,ey+3.5,2,0,Math.PI*2);ctx.fill();
+    // Eye shine
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx-4.5,ey+2.5,1,0,Math.PI*2);ctx.arc(cx+3.5,ey+2.5,1,0,Math.PI*2);ctx.fill();
+  }
+
+  // Mouth
+  if(hat!=='screen'&&hat!=='barrel'){
+    ctx.strokeStyle='rgba(0,0,0,0.4)';ctx.lineWidth=1.5;ctx.beginPath();
+    if(role==='Tank'||role==='Assassin'){ctx.moveTo(cx-4,ey+8);ctx.lineTo(cx+4,ey+8);} // determined
+    else{ctx.arc(cx,ey+9,3,0.1*Math.PI,0.9*Math.PI);} // smile
+    ctx.stroke();
+  }
+
   ctx.globalAlpha=1;
 
-  // Name
+  // === NAME TAG ===
   ctx.font='600 10px Poppins';ctx.textAlign='center';
-  ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillText(bName,cx+1,ey-13);
-  ctx.fillStyle=isMe?'#ffdd44':'#fff';ctx.fillText(bName,cx,ey-14);
+  ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillText(bName,cx+1,ey-17);
+  ctx.fillStyle=isMe?'#ffdd44':'#fff';ctx.fillText(bName,cx,ey-18);
 
-  // HP bar
-  const hpW=36,hpH=5,hpX=cx-hpW/2,hpY=ey-8;
-  ctx.fillStyle='rgba(0,0,0,0.5)';ctx.beginPath();ctx.roundRect?ctx.roundRect(hpX-1,hpY-1,hpW+2,hpH+2,3):ctx.rect(hpX-1,hpY-1,hpW+2,hpH+2);ctx.fill();
+  // === HP BAR ===
+  const hpW=36,hpH=5,hpX=cx-hpW/2,hpY=ey-12;
+  ctx.fillStyle='rgba(0,0,0,0.5)';ctx.beginPath();
+  if(ctx.roundRect)ctx.roundRect(hpX-1,hpY-1,hpW+2,hpH+2,3);else ctx.rect(hpX-1,hpY-1,hpW+2,hpH+2);ctx.fill();
   const hpPct=Math.max(0,e.hp/e.maxHp);
   ctx.fillStyle=hpPct>0.6?'#44dd66':hpPct>0.3?'#ffaa00':'#ff4444';
-  ctx.beginPath();ctx.roundRect?ctx.roundRect(hpX,hpY,hpW*hpPct,hpH,2):ctx.rect(hpX,hpY,hpW*hpPct,hpH);ctx.fill();
+  ctx.beginPath();if(ctx.roundRect)ctx.roundRect(hpX,hpY,hpW*hpPct,hpH,2);else ctx.rect(hpX,hpY,hpW*hpPct,hpH);ctx.fill();
+  // HP bar shine
+  ctx.fillStyle='rgba(255,255,255,0.25)';ctx.beginPath();
+  if(ctx.roundRect)ctx.roundRect(hpX,hpY,hpW*hpPct,hpH/2,2);else ctx.rect(hpX,hpY,hpW*hpPct,hpH/2);ctx.fill();
 
-  if(e.powerLevel>0){ctx.fillStyle='#ffaa00';ctx.beginPath();ctx.arc(cx+ew/2+2,ey,8,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='700 8px Poppins';ctx.fillText(e.powerLevel,cx+ew/2+2,ey+3);}
+  // Power level badge
+  if(e.powerLevel>0){ctx.fillStyle='#ffaa00';ctx.beginPath();ctx.arc(cx+ew/2+2,ey-4,8,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='700 8px Poppins';ctx.fillText(e.powerLevel,cx+ew/2+2,ey-1);}
+}
+
+function darken(hex,amt){
+  let r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return `rgb(${Math.max(0,r-amt)},${Math.max(0,g-amt)},${Math.max(0,b-amt)})`;
 }
 
 function renderBullet(b){
@@ -890,18 +1131,7 @@ function renderDmgNum(d){
 // ============================================================
 // SOLO MODE (offline vs bots - same as before)
 // ============================================================
-const SOLO_BRAWLERS = [
-  { name:'Shelly', role:'Fighter', color:'#e84393', hp:5600, speed:2.8, damage:420, range:280, reload:1.2, projSpeed:9, projCount:5, spread:0.45 },
-  { name:'Colt', role:'Sharpshooter', color:'#0984e3', hp:3600, speed:3.0, damage:360, range:380, reload:1.0, projSpeed:12, projCount:6, spread:0.15 },
-  { name:'Bull', role:'Tank', color:'#d63031', hp:7000, speed:2.6, damage:520, range:200, reload:1.4, projSpeed:8, projCount:5, spread:0.5 },
-  { name:'Brock', role:'Sharpshooter', color:'#6c5ce7', hp:3200, speed:2.8, damage:1100, range:400, reload:1.8, projSpeed:10, projCount:1, spread:0 },
-  { name:'Jessie', role:'Support', color:'#fdcb6e', hp:4200, speed:2.8, damage:900, range:320, reload:1.6, projSpeed:8, projCount:1, spread:0 },
-  { name:'Nita', role:'Fighter', color:'#00b894', hp:5000, speed:2.8, damage:800, range:260, reload:1.3, projSpeed:8, projCount:1, spread:0 },
-  { name:'Poco', role:'Healer', color:'#00cec9', hp:5000, speed:2.8, damage:700, range:300, reload:1.4, projSpeed:7, projCount:1, spread:0 },
-  { name:'El Primo', role:'Tank', color:'#e17055', hp:8000, speed:2.7, damage:450, range:120, reload:0.6, projSpeed:0, projCount:4, spread:0.6 },
-  { name:'Barley', role:'Thrower', color:'#a29bfe', hp:3400, speed:2.6, damage:800, range:340, reload:1.8, projSpeed:7, projCount:1, spread:0 },
-  { name:'Spike', role:'Fighter', color:'#55efc4', hp:3200, speed:2.8, damage:560, range:320, reload:1.6, projSpeed:8, projCount:6, spread:0.9 }
-];
+const SOLO_BRAWLERS = BRAWLER_DATA; // use shared 80+ brawler data
 
 function startSoloGame(){
   soloMode=true; gameState='playing';
@@ -934,7 +1164,9 @@ function startSoloGame(){
   canvas.width=window.innerWidth;canvas.height=window.innerHeight;
   document.getElementById('hud').style.display='block';document.getElementById('hudHp').style.display='flex';
   document.getElementById('controlsHint').style.display=isMobile?'none':'block';document.getElementById('superBtn').style.display='block';
+  document.getElementById('helpBtn').style.display='block';
   buildAmmoUI(3);
+  if (!localStorage.getItem('bz_tutorial_seen')) { document.getElementById('controlsTutorial').classList.remove('hidden'); }
 
   // Countdown
   let cn=3;const ov=document.getElementById('countdownOverlay'),ne=document.getElementById('countdownNum');
@@ -1069,7 +1301,7 @@ function renderSolo(){
 
 function endSoloGame(won){
   gameState='gameover';
-  document.getElementById('hud').style.display='none';document.getElementById('hudHp').style.display='none';document.getElementById('superBtn').style.display='none';document.getElementById('controlsHint').style.display='none';document.getElementById('killFeed').innerHTML='';
+  document.getElementById('hud').style.display='none';document.getElementById('hudHp').style.display='none';document.getElementById('superBtn').style.display='none';document.getElementById('controlsHint').style.display='none';document.getElementById('helpBtn').style.display='none';document.getElementById('killFeed').innerHTML='';
   const rank=won?1:Math.max(2,soloAliveCount);
   const trophyChange=won?8:(rank<=3?5:rank<=5?2:-2);
   updateStats(won,soloKillsThisGame,trophyChange);

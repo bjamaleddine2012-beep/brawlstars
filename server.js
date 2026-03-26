@@ -25,6 +25,7 @@ const httpServer = http.createServer((req, res) => {
 });
 
 const io = new Server(httpServer, { cors: { origin: '*' } });
+const { BRAWLER_DATA } = require('./brawlers.js');
 
 // ============================================================
 // GAME CONFIG
@@ -35,18 +36,7 @@ const MAP_W = MAP_COLS * TILE, MAP_H = MAP_ROWS * TILE;
 const TICK_RATE = 20; // 20 updates/sec
 const TICK_MS = 1000 / TICK_RATE;
 
-const BRAWLERS = [
-  { name:'Shelly', role:'Fighter', color:'#e84393', hp:5600, speed:2.8, damage:420, range:280, reload:1.2, projSpeed:9, projCount:5, spread:0.45 },
-  { name:'Colt', role:'Sharpshooter', color:'#0984e3', hp:3600, speed:3.0, damage:360, range:380, reload:1.0, projSpeed:12, projCount:6, spread:0.15 },
-  { name:'Bull', role:'Tank', color:'#d63031', hp:7000, speed:2.6, damage:520, range:200, reload:1.4, projSpeed:8, projCount:5, spread:0.5 },
-  { name:'Brock', role:'Sharpshooter', color:'#6c5ce7', hp:3200, speed:2.8, damage:1100, range:400, reload:1.8, projSpeed:10, projCount:1, spread:0 },
-  { name:'Jessie', role:'Support', color:'#fdcb6e', hp:4200, speed:2.8, damage:900, range:320, reload:1.6, projSpeed:8, projCount:1, spread:0 },
-  { name:'Nita', role:'Fighter', color:'#00b894', hp:5000, speed:2.8, damage:800, range:260, reload:1.3, projSpeed:8, projCount:1, spread:0 },
-  { name:'Poco', role:'Healer', color:'#00cec9', hp:5000, speed:2.8, damage:700, range:300, reload:1.4, projSpeed:7, projCount:1, spread:0 },
-  { name:'El Primo', role:'Tank', color:'#e17055', hp:8000, speed:2.7, damage:450, range:120, reload:0.6, projSpeed:0, projCount:4, spread:0.6 },
-  { name:'Barley', role:'Thrower', color:'#a29bfe', hp:3400, speed:2.6, damage:800, range:340, reload:1.8, projSpeed:7, projCount:1, spread:0 },
-  { name:'Spike', role:'Fighter', color:'#55efc4', hp:3200, speed:2.8, damage:560, range:320, reload:1.6, projSpeed:8, projCount:6, spread:0.9 }
-];
+const BRAWLERS = BRAWLER_DATA;
 
 // ============================================================
 // ROOMS
